@@ -1,0 +1,104 @@
+#backbone_grid-container {
+	position: inherit;
+	width: 100%;
+	top: 0px;
+	left: 0px;
+	bottom: 0px;
+	background-color: #fff;
+	padding: 3px;
+	overflow: scroll;
+}
+#backbone_grid-container>div {
+	z-index: 1000;
+	position: relative;
+}
+
+.backbone_person-card {
+	width: 295px;
+	border: 1px solid #333;
+	margin: 3px;
+	padding: 3px;
+	float: left;
+	font-size: 20px;
+	line-height: 24px;
+}
+
+.backbone_person-gravatar {
+	float: left;
+	margin: 3px;
+}
+
+.backbone-person-loading {
+	background-image: url( '../images/spinner.gif');
+	background-size: 20px auto;
+	width: 20px;
+	height: 20px;
+	display: none;
+	margin-top: 10px;
+}
+
+.backbone_person-card a.icon {
+	float: right;
+}
+
+.backbone_person-card .backbone_person-name {
+}
+
+.backbone_person-card:hover {
+	background-color: #eaeba1;
+	transition: background 0.5s linear;
+}
+
+.backbone_person-card a {
+	color: #180565;
+}
+
+.backbone_person-card a:hover {
+	color: #0f27c7;
+}
+
+input#backbone_person-search-field {
+	font-size: 2em;
+}
+
+.backbone_person-name {
+	font-weight: bold;
+}
+
+.backbone_person_detail-card {
+	max-width: 90%;
+	max-height: 90%;
+	min-height: 150px;
+	min-width: 38%;
+	background-color: #eee;
+	border: 1px solid #333;
+	z-index: 100000;
+	position: fixed;
+	margin: 0 30%;
+	display: inline-block;
+}
+
+.backbone_card_detail_container {
+	display: none;
+}
+
+.backbone_person_detail-card img {
+	float: left;
+	margin: 10px;
+}
+
+#backbone_grid {
+	height: auto;
+	position: relative;
+}
+
+.backbone_person_detail-name {
+	font-size: 32px;
+	font-weight: bold;
+	margin: 8px;
+}
+
+.backbone_person_detail-twittertxt {
+	font-size: 24px;
+}
+
