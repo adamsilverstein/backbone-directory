@@ -99,6 +99,16 @@ window.wp = window.wp || {};
 				}, 250 ) );
 			},
 
+			// Find and set the person who was just triggered
+			personDetail: function( person ) {
+				console.log( 'personDetail' );
+				var $person    = $( person.currentTarget ),
+					name       = $person.find('.backbone_person-name').text();
+
+				this.model = this.backbonePeople.findWhere( { 'name': name } );
+				this.render();
+			},
+
 			showPersonDetailDialog: function() {
 				// If the modal is hidden, fade it in
 				if ( this.$el.is(':hidden') ) {
@@ -108,6 +118,10 @@ window.wp = window.wp || {};
 
 			hidePersonDetailDialog: function() {
 				this.$el.fadeOut( 'fast' );
+			},
+
+			getCurrentIndex: function() {
+				return this.backbonePeople.indexOf( this.model );
 			},
 
 			goPrevious: function() {
@@ -120,10 +134,6 @@ window.wp = window.wp || {};
 
 			hasPrevious: function() {
 				return ( this.getCurrentIndex() - 1 ) > -1;
-			},
-
-			getCurrentIndex: function() {
-				return this.backbonePeople.indexOf( this.model );
 			},
 
 			goNext: function() {
@@ -160,15 +170,6 @@ window.wp = window.wp || {};
 				}
 			},
 
-			personDetail: function( person ) {
-				console.log( 'personDetail' );
-				var $person    = $( person.currentTarget ),
-					name       = $person.find('.backbone_person-name').text();
-
-				this.model = this.backbonePeople.findWhere( { 'name': name } );
-				this.render();
-			},
-
 			render: function() {
 				var self = this;
 
@@ -189,25 +190,6 @@ window.wp = window.wp || {};
 			template: wp.template( 'backbone_person-search' ),
 			search:   '',
 
-			events: {
-				'focus #backbone_person-search-field':  'searchFocus',
-				'blur  #backbone_person-search-field':  'searchBlur'
-			},
-
-			searchChange: function( search ) {
-				var searchFor = this.$el.find( search ).prop('value');
-				console.log( 'searchchange ' + searchFor );
-				this.backbonePeople.searchFor( searchFor );
-			},
-
-			searchFocus: function( search ) {
-				this.$el.find( search.currentTarget ).css( 'color', '#000' );
-			},
-
-			searchBlur: function( search ) {
-				this.$el.find( search.currentTarget ).css( 'color', '#aaa' );
-			},
-
 			initialize: function( options ) {
 				var self = this,
 					backboneRouter = options.backboneRouter;
@@ -217,6 +199,16 @@ window.wp = window.wp || {};
 				this.$el.on( 'keypress', '#backbone_person-search-field',_.debounce( function(){
 					self.searchChange( this );
 				}, 250 ) );
+			},
+
+			events: {
+				'keypress #backbone_person-search-field':  'searchChange'
+			},
+
+			searchChange: function( search ) {
+				var searchFor = this.$el.find( search ).prop('value');
+				console.log( 'searchchange ' + searchFor );
+				this.backbonePeople.searchFor( searchFor );
 			},
 
 			render: function() {
@@ -258,6 +250,9 @@ window.wp = window.wp || {};
 
 			adjustSearch: function() {
 				console.log( 'backbone_Grid:searchChanged'  );
+				if ( 'undefined' === typeof this.backbonePeople.search ) {
+					return;
+				}
 				// If the search string is blank, don't include '?search=' string in navigation
 				var navigateto = ( '' === this.backbonePeople.search ) ? '' : '?search=' + this.backbonePeople.search;
 				this.backboneRouter.navigate( navigateto, { replace: true } );

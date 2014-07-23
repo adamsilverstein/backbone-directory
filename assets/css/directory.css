@@ -59,6 +59,11 @@
 
 input#backbone_person-search-field {
 	font-size: 2em;
+	color: #ccc;
+}
+
+input#backbone_person-search-field:focus {
+	color: #000;
 }
 
 .backbone_person-name {
