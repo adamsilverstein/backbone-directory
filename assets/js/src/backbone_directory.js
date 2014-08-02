@@ -1,4 +1,4 @@
-/*global Backbone, jQuery, console, window, document, wp, Masonry, _, google, GMaps, directoryPageHTML, _wpUtilSettings, _bd, cachedAtendees */
+/*global Backbone, jQuery, console, window, document, wp, Masonry, _, google, GMaps, directoryPageHTML, _wpUtilSettings */
 
 /**
  * Backbone Directory
@@ -26,16 +26,11 @@ window.wp = window.wp || {};
 
 				this.set( {
 								'name':       singleData.name,
-								'imagesrc':   singleData.imagesrc,
 								'emailhash':  singleData.emailhash,
 								'twitterurl': singleData.twitterurl,
 								'twittertxt': singleData.twittertxt,
-								'atendeeurl': singleData.atendeeurl
+								'atendeeUrl': singleData.atendeeUrl
 							} );
-			},
-
-			toJSON : function() {
-				return _.clone(this.attributes);
 			}
 		}),
 
@@ -65,7 +60,7 @@ window.wp = window.wp || {};
 		/**
 		 * The person display view - display the card of a single person
 		 */
-		BackbonePersonDisplay = wp.Backbone.View.extend({
+		BackbonePersonDisplay = Backbone.View.extend({
 
 			template:  wp.template( 'backbone_person' ),
 			el:        '#backbone_card',
@@ -83,7 +78,7 @@ window.wp = window.wp || {};
 		/**
 		 * The person detail view
 		 */
-		BackbonePersonDetail = wp.Backbone.View.extend({
+		BackbonePersonDetail = Backbone.View.extend({
 
 			template:  wp.template( 'backbone_person_detail' ),
 			el:        '#backbone_card_detail_container',
@@ -93,6 +88,7 @@ window.wp = window.wp || {};
 				var self = this;
 				this.backboneGrid   = options.backboneGrid;
 				this.backbonePeople = options.backbonePeople;
+				this.backboneRouter = options.backboneRouter;
 				this.listenTo( this.backboneGrid, 'detailView', this.personDetail );
 				$( document ).on( 'keyup', _.throttle( function( e ){
 					self.keyPress( e );
@@ -103,10 +99,11 @@ window.wp = window.wp || {};
 			personDetail: function( person ) {
 				console.log( 'personDetail' );
 				var $person    = $( person.currentTarget ),
-					name       = $person.find('.backbone_person-name').text();
+					name       = $person.find('.backbone_person-name>span').text();
 
 				this.model = this.backbonePeople.findWhere( { 'name': name } );
 				this.render();
+
 			},
 
 			showPersonDetailDialog: function() {
@@ -162,9 +159,11 @@ window.wp = window.wp || {};
 				if ( this.$el.is(':hidden') ) {
 					return;
 				}
+
 				if ( 39 === event.keyCode ) { /* right */
 					_.once( this.goNext() );
 				}
+
 				if ( 37 === event.keyCode ) { /* left */
 					_.once( this.goPrevious() );
 				}
@@ -172,6 +171,7 @@ window.wp = window.wp || {};
 
 			render: function() {
 				var self = this;
+				this.backboneRouter.navigate( '?details=' + this.model.get( 'name' ), { replace: false } );
 
 				console.log( 'BackbonePersonDetail render ' );
 				this.$el.html( this.template( this.model.attributes ) );
@@ -222,7 +222,7 @@ window.wp = window.wp || {};
 		/**
 		 * The Grid view - displays the directory grid
 		 */
-		BackboneGrid = wp.Backbone.View.extend({
+		BackboneGrid = Backbone.View.extend({
 			backbonePeople: null, /* the collection of backbonePeople */
 			el:       '#backbone_grid',
 			msnry:    null,
@@ -255,7 +255,7 @@ window.wp = window.wp || {};
 				}
 				// If the search string is blank, don't include '?search=' string in navigation
 				var navigateto = ( '' === this.backbonePeople.search ) ? '' : '?search=' + this.backbonePeople.search;
-				this.backboneRouter.navigate( navigateto, { replace: true } );
+				this.backboneRouter.navigate( navigateto, { replace: false } );
 				this.render();
 			},
 
@@ -277,12 +277,11 @@ window.wp = window.wp || {};
 					//add the backbone_person to the grid
 					newEl += self.template( backbone_person.attributes );
 				} );
-			self.$el.html( newEl );
-			console.log( ' gridrender complete ' );
+				self.$el.html( newEl );
+				console.log( ' gridrender complete ' );
 
-				console.log( $( window ).innerHeight() );
-				//$( '#backbone_grid-container' ).height( $( window ).innerHeight() + 'px' );
-				//return this;
+				self.$el.parent().find( '#backbone-person-count>span' ).html( gridmodels.length );
+
 			}
 		}),
 
@@ -306,15 +305,15 @@ window.wp = window.wp || {};
 			openbackbonePerson: function( name ) {
 				console.log( 'route: ' + name + ' ' );
 				// find the model
+				BackboneDirectoryApp.personDetail.model = BackboneDirectoryApp.backbonePeople.where({ 'name': name })[0];
+				BackboneDirectoryApp.personDetail.render();
 
-				var theModel = BackboneDirectoryApp.backbonePeople.where({ 'name': name });
-
-				BackboneDirectoryApp.backbonePersonDisp.model.set( theModel[0].attributes );
 			},
 
 			performSearch: function( s ) {
 				console.log( 'Router::performSearch' );
 				$( 'input#backbone_person-search-field' ).val( s ).trigger( 'keypress' ).select();
+				BackboneDirectoryApp.personDetail.hidePersonDetailDialog();
 			}
 		}),
 
@@ -324,16 +323,10 @@ window.wp = window.wp || {};
 		 * The main application object
 		 */
 		BackboneDirectoryApp = {
-			Views: {},
-			Routers: {},
-			Models: {},
-			data: {},
 
 			initialize: function() {
-				var self = this, users;
-
-
-				var imgsrc, gravhash, $loadcount = $( '#backbone_directory_loading_count' );
+				var self = this, users, imgsrc, gravhash,
+					$loadcount = $( '#backbone_directory_loading_count' );
 
 				self.backbonePeople = new BackbonePersonCollection( );
 				users = $( 'ul.tix-attendee-list li', $( directoryPageHTML ) );
@@ -348,7 +341,7 @@ window.wp = window.wp || {};
 						data.name       = $this.find( '.tix-attendee-name' ).text().trim();
 						data.twitterurl = $this.find( 'a.tix-attendee-twitter' ).attr( 'href' );
 						data.twittertxt = $this.find( 'a.tix-attendee-twitter' ).text().trim();
-						data.atendeeurl = $this.find( 'a.tix-attendee-url' ).attr( 'href' );
+						data.atendeeUrl = $this.find( 'a.tix-attendee-url' ).attr( 'href' );
 
 					backbone_person = new BackbonePerson( data );
 					self.backbonePeople.add( backbone_person );
@@ -363,15 +356,16 @@ window.wp = window.wp || {};
 						'backbonePeople': self.backbonePeople,
 						'backboneRouter': self.backboneRouter
 						};
-				var grid       = new BackboneGrid( options ),
-					searchBar  = new BackboneSearchbar( options ),
-					detailView = new BackbonePersonDetail( _.extend(
+				self.backboneGrid = new BackboneGrid( options );
+
+				var	searchBar  = new BackboneSearchbar( options );
+					self.personDetail = new BackbonePersonDetail( _.extend(
 						options, {
-							'backboneGrid': grid,
+							'backboneGrid': self.backboneGrid,
 							model: new BackbonePerson()
 						} ) );
 
-				grid.render();
+				self.backboneGrid.render();
 
 				$( window ).on( 'resize', _.debounce( function() {
 					var wide = $( this ).innerWidth() ;

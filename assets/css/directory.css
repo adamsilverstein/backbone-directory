@@ -95,6 +95,7 @@ input#backbone_person-search-field:focus {
 #backbone_grid {
 	height: auto;
 	position: relative;
+	padding-top: 40px;
 }
 
 .backbone_person_detail-name {
@@ -107,3 +108,25 @@ input#backbone_person-search-field:focus {
 	font-size: 24px;
 }
 
+#backbone_grid-container #backbone-person-count {
+	clear: none;
+	display: inline;
+	font-size: 1.6em;
+	vertical-align: top;
+	color: #333;
+	margin-left: 470px;
+	padding-top: 1px;
+	position: absolute;
+	line-height: 42px;
+	vertical-align: middle;
+}
+
+#backbone_grid-container .backbone-search-line {
+	position: fixed;
+	background-color: #fff;
+	z-index: 9999;
+	border-bottom: 1px solid #333;
+	width: 100%;
+	top: 0;
+	left: 0;
+}
