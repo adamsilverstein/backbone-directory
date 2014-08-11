@@ -368,8 +368,8 @@ window.wp = window.wp || {};
 				self.backboneGrid.render();
 
 				$( window ).on( 'resize', _.debounce( function() {
-					var wide = $( this ).innerWidth() ;
-					$( '#backbone_grid-container' ).height( $( this ).innerHeight() + 'px' );
+					var wide = $( this ).innerWidth() - 10 ;
+					$( '#backbone_grid-container' ).height( '100%' );
 					$( '#backbone_grid-container' ).width( wide + 'px' );
 				}, 150 ) );
 
