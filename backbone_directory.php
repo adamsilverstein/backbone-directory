@@ -53,7 +53,118 @@ include( backbone_DIRECTORY_PATH . 'includes/directory_setup.php' );
 function backbone_directory_init() {
 	$locale = apply_filters( 'plugin_locale', get_locale(), 'backbone_directory' );
 	load_textdomain( 'backbone_directory', WP_LANG_DIR . '/backbone_directory/backbone_directory-' . $locale . '.mo' );
-	load_plugin_textdomain( 'backbone_directory', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+	load_plugin_textdomain( 'backbone_directory', false, backbone_DIRECTORY_URL . '/languages/' );
+
+	register_post_type( 'backbonedirectory', array(
+		'label'  => __( 'Backbone Directory', 'backbone_directory' ),
+		'public' => true,
+		'supports' => array( 'title', 'editor', 'custom-fields' )
+
+		)
+	);
+	add_action( 'wp_ajax_backbone_load_directory_data', 'backbone_load_directory_data' );
+	add_action( 'wp_ajax_backbone_insert_user', 'backbone_insert_user' );
+	add_filter( 'json_prepare_post', function ($data, $post, $context) {
+		$data['usermeta'] = array(
+			'imgsrc'     => get_post_meta( $post['ID'], 'imgsrc', true ),
+			'emailhash'  => get_post_meta( $post['ID'], 'emailhash', true ),
+			'twittertxt' => get_post_meta( $post['ID'], 'twittertxt', true ),
+			'atendeeUrl' => get_post_meta( $post['ID'], 'atendeeUrl', true ),
+		);
+		return $data;
+	}, 10, 3 );
+
+}
+
+add_action('admin_enqueue_scripts', 'bacbkbone_admin_enqueue_scripts');
+function bacbkbone_admin_enqueue_scripts( $arg ) {
+	$screen = get_current_screen();
+	if ( $screen->id != "edit-backbonedirectory" ) { // Only add to users.php page
+		return;
+	}
+
+	wp_enqueue_script(
+		'backbone_directory_settings',
+		backbone_DIRECTORY_URL . 'assets/js/src/bbsettings.js',
+		array( 'underscore' ),
+		'0.0.0.1',
+		false
+	);
+
+	wp_localize_script(
+		'backbone_directory_settings',
+		'bbSettings',
+		array(
+			'importUsers'   => __( 'Import Backbone Users', 'backbone_directory' ),
+			'closeImporter' => __( 'Close Importer', 'backbone_directory' ),
+			'results'       => __( 'Results:', 'backbone_directory' ),
+			'restAPI'       => site_url() . '/wp-json/',
+			'localUsers'    => __( 'Local Users: ', 'backbone_directory' ),
+			'insertnonce'   => wp_create_nonce( 'insertbackboneuser' ),
+			)
+		);
+	wp_localize_script( 'backbone_directory_settings', 'directoryPageHTML', bd_get_directory_html() );
+
+	wp_enqueue_style( 'styles', backbone_DIRECTORY_URL . 'assets/css/backbone_directory.css' );
+
+
+}
+
+/**
+ * Ajax callback to insert a new user
+ */
+function backbone_insert_user() {
+	check_ajax_referer( 'insertbackboneuser' );
+
+	$query = "
+		DELETE FROM wp_posts
+		WHERE post_type = 'backbonedirectory'
+		";
+
+	$wpdb->query($query);
+
+	$userdata = $_POST[ 'userdata' ];
+
+	$newpost = wp_insert_post( array(
+		'post_title'  => esc_attr( $userdata[ 'name' ] ),
+		'post_type'   => 'backbonedirectory',
+		'post_status' => 'publish',
+		) );
+	add_post_meta(
+		$newpost,
+		'imgsrc',
+		$userdata[ 'imgsrc' ],
+		true
+	);
+	add_post_meta(
+		$newpost,
+		'emailhash',
+		$userdata[ 'emailhash' ],
+		true
+	);
+	add_post_meta(
+		$newpost,
+		'twittertxt',
+		$userdata[ 'twittertxt' ],
+		true
+	);
+	add_post_meta(
+		$newpost,
+		'atendeeUrl',
+		$userdata[ 'atendeeUrl' ],
+		true
+	);
+
+	wp_send_json_success( $newpost );
+
+}
+
+
+/**
+ * Ajax callback to load the directory data
+ */
+function backbone_load_directory_data() {
+
 }
 
 /**
@@ -62,7 +173,6 @@ function backbone_directory_init() {
 function backbone_directory_activate() {
 	// First load the init scripts in case any rewrite functionality is being loaded
 	backbone_directory_init();
-
 	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'backbone_directory_activate' );

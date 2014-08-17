@@ -5,3 +5,10 @@
  * Copyright (c) 2014 Adam Silverstein
  * Licensed under the GPLv2+ license.
  */
+.backbone-user-importer {
+	width: 98%;
+	height: 200px;
+	border: 1px solid #ccc;
+	padding-left: 10px;
+	margin-bottom: 25px;
+}

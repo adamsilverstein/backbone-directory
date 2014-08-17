@@ -101,7 +101,7 @@ window.wp = window.wp || {};
 				var $person    = $( person.currentTarget ),
 					name       = $person.find('.backbone_person-name>span').text();
 
-				this.model = this.backbonePeople.findWhere( { 'name': name } );
+				this.model = this.backbonePeople.findWhere( { 'title': name } );
 				this.render();
 
 			},
@@ -325,51 +325,41 @@ window.wp = window.wp || {};
 		BackboneDirectoryApp = {
 
 			initialize: function() {
-				var self = this, users, imgsrc, gravhash,
+				var self = this, users, imgsrc, gravhash, fetched, fetched2,
 					$loadcount = $( '#backbone_directory_loading_count' );
 
 				self.backbonePeople = new BackbonePersonCollection( );
-				users = $( 'ul.tix-attendee-list li', $( directoryPageHTML ) );
+				self.backbonePeople.url = '/wp-json/posts?filter[posts_per_page]=1000&filter[order]=ASC&filter[offset]=22&type=backbonedirectory';
 
-				_.each( users, function( singleData, index ) {
-					var $this      = $( singleData ),
-						data = {}, backbone_person;
+				fetched = self.backbonePeople.fetch();
+				fetched.done( function( results ) {
+					console.log( results );
+					self.backboneRouter = new BackboneRouter();
+					self.backbonePersonDisp = new BackbonePersonDisplay( {
+						model: new BackbonePerson()
+					});
+					var options = {
+							'backbonePeople': self.backbonePeople,
+							'backboneRouter': self.backboneRouter
+							};
+					self.backboneGrid = new BackboneGrid( options );
 
-						$loadcount.text( index );
-						data.imgsrc     = $this.find( 'img' ).attr ( 'src' );
-						data.emailhash  = data.imgsrc.match( /avatar\/(.*)\?.*/i )[1];
-						data.name       = $this.find( '.tix-attendee-name' ).text().trim();
-						data.twitterurl = $this.find( 'a.tix-attendee-twitter' ).attr( 'href' );
-						data.twittertxt = $this.find( 'a.tix-attendee-twitter' ).text().trim();
-						data.atendeeUrl = $this.find( 'a.tix-attendee-url' ).attr( 'href' );
+					var	searchBar  = new BackboneSearchbar( options );
+						self.personDetail = new BackbonePersonDetail( _.extend(
+							options, {
+								'backboneGrid': self.backboneGrid,
+								model: new BackbonePerson()
+							} ) );
 
-					backbone_person = new BackbonePerson( data );
-					self.backbonePeople.add( backbone_person );
-				} );
-
-				self.backboneRouter = new BackboneRouter();
-
-				self.backbonePersonDisp = new BackbonePersonDisplay( {
-					model: new BackbonePerson()
+					self.backboneGrid.render();
 				});
-				var options = {
-						'backbonePeople': self.backbonePeople,
-						'backboneRouter': self.backboneRouter
-						};
-				self.backboneGrid = new BackboneGrid( options );
 
-				var	searchBar  = new BackboneSearchbar( options );
-					self.personDetail = new BackbonePersonDetail( _.extend(
-						options, {
-							'backboneGrid': self.backboneGrid,
-							model: new BackbonePerson()
-						} ) );
 
-				self.backboneGrid.render();
+
 
 				$( window ).on( 'resize', _.debounce( function() {
-					var wide = $( this ).innerWidth() ;
-					$( '#backbone_grid-container' ).height( $( this ).innerHeight() + 'px' );
+					var wide = $( this ).innerWidth() - 10 ;
+					$( '#backbone_grid-container' ).height( '100%' );
 					$( '#backbone_grid-container' ).width( wide + 'px' );
 				}, 150 ) );
 
