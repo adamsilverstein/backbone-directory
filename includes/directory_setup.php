@@ -64,13 +64,13 @@ function displaybackbone_directory(){
 <script id="tmpl-backbone_person" type="text/html">
 		<div class="backbone_person-card" tabindex=0>
 			<div class="backbone_person-gravatar">
-				<img src="http://www.gravatar.com/avatar/{{ data.emailhash }}"  width="64" height="64">
+				<img src="http://www.gravatar.com/avatar/{{ data.usermeta.emailhash }}"  width="64" height="64">
 			</div>
 			<div class="backbone_person-name">
-				<span>{{ data.name }}</span>
+				<span>{{ data.title }}</span>
 			</div>
 			<div class="backbone_person-twittertxt">
-				<span>{{ data.twittertxt }}</span>
+				<span>{{ data.usermeta.twittertxt }}</span>
 			</div>
 		</div>
 </script>
@@ -83,16 +83,16 @@ function displaybackbone_directory(){
 <script id="tmpl-backbone_person_detail" type="text/html">
 		<div class="backbone_person_detail-card">
 			<div class="backbone_person_detail-gravatar">
-				<img src='http://www.gravatar.com/avatar/{{ data.emailhash }}?s=128' width="128" height="128">
+				<img src='http://www.gravatar.com/avatar/{{ data.usermeta.emailhash }}?s=128' width="128" height="128">
 			</div>
-			<a class="icon" href="{{ data.twitterurl }}" target="_blank"></a>
-			<a class="icon" href="{{ data.atendeeUrl }}" target="_blank"></a>
+			<a class="icon" href="{{ data.usermeta.twitterurl }}" target="_blank"></a>
+			<a class="icon" href="{{ data.usermeta.atendeeUrl }}" target="_blank"></a>
 			<div class="backbone_person_detail-name">
-				<span>{{ data.name }}</span>
+				<span>{{ data.title }}</span>
 			</div>
-			<a href="{{ data.twitterurl }}" target="_blank">
+			<a href="{{ data.usermeta.twitterurl }}" target="_blank">
 				<div class="backbone_person_detail-twittertxt">
-					<span>{{ data.twittertxt }}</span>
+					<span>{{ data.usermeta.twittertxt }}</span>
 				</div>
 			</a>
 		</div>
