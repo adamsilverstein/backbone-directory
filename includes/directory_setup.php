@@ -62,7 +62,7 @@ function displaybackbone_directory(){
 </div>
 
 <script id="tmpl-backbone_person" type="text/html">
-		<div class="backbone_person-card" tabindex=0>
+		<div class="backbone_person-card" tabindex=0 id="backbone_person-{{ data.ID }}">
 			<div class="backbone_person-gravatar">
 				<img src="http://www.gravatar.com/avatar/{{ data.usermeta.emailhash }}"  width="64" height="64">
 			</div>
@@ -95,6 +95,9 @@ function displaybackbone_directory(){
 					<span>{{ data.usermeta.twittertxt }}</span>
 				</div>
 			</a>
+			<div class="backbone_person_detail-aboutme">
+				<span>{{ data.aboutMe }}</span>
+			</div>
 		</div>
 </script>
 
