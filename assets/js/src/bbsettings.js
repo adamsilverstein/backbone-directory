@@ -1,4 +1,4 @@
-/*global window, bbSettings */
+/*global window, bbSettings, document, console, directoryPageHTML, ajaxurl, jQuery */
 (function($) {
 	$( document ).ready( function() {
 		var stepone, steptwo, localUsers, users;
@@ -41,17 +41,19 @@
 							'userdata':    userdata
 						}
 					});
-			}
-			processAllUsers = function( index ) {
-				user = sendUser( users[ index ] );
+			};
+
+			var processAllUsers = function( index ) {
+				var user = sendUser( users[ index ] );
 				index++;
 				user.always(function() {
 					console.log( index );
 					//if ( index < 5 ) {
-						setTimeout( processAllUsers( index ), 1000 );
+						window.setTimeout( processAllUsers( index ), 1000 );
 					//}
 				});
-			}
+			};
+
 			processAllUsers( 0 );
 
 
