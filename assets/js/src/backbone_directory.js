@@ -313,7 +313,7 @@ window.wp = window.wp || {};
 		 */
 		BackboneDirectoryApp = {
 
-			pagelimit:   5,
+			pagelimit:   30,
 			loadedCount: 0,
 
 			fetch: function( offset ) {
@@ -326,13 +326,31 @@ window.wp = window.wp || {};
 				return this.backbonePeople.fetch( { remove: false } );
 			},
 
+			watchForScroll: function() {
+				var self = this;
+				$( window ).on( 'scroll', function() {
+					if( $(window).scrollTop() + $(window).height() > $( '#backbone_grid-container' ).height() - 100 ) {
+							$( window ).off( 'scroll' );
+							console.log( 'scroll' );
+							var fetched = self.fetch( self.loadedCount );
+							fetched.done( function( results ) {
+								if ( ! _.isEmpty( results ) ) {
+									self.loadedCount += self.pagelimit;
+									self.backboneGrid.render();
+									self.watchForScroll();
+								}
+						});
+					}
+				});
+			},
+
 			initialize: function() {
 				var self = this, users, imgsrc, gravhash, fetched, fetched2,
 					$loadcount = $( '#backbone_directory_loading_count' );
 
 				self.backbonePeople = new BackbonePersonCollection( );
 
-				fetched = this.fetch( 0 );
+				fetched = this.fetch( self.loadedCount );
 				fetched.done( function( results ) {
 					self.loadedCount += self.pagelimit;
 					console.log( results );
@@ -354,6 +372,8 @@ window.wp = window.wp || {};
 							} ) );
 
 					self.backboneGrid.render();
+					self.watchForScroll();
+
 				});
 
 
