@@ -358,7 +358,7 @@ window.wp = window.wp || {};
 		 */
 		BackboneDirectoryApp = {
 
-			pagelimit:   40,
+			pagelimit:   80,
 			loadedCount: 0,
 
 			fetch: function( offset ) {
@@ -371,9 +371,9 @@ window.wp = window.wp || {};
 				return this.backbonePeople.fetch( { remove: false } );
 			},
 
-			watchForScroll: function() {
+			watchForScroll: function( retrigger ) {
 				var self = this;
-				$( window ).on( 'scroll', function( retrigger ) {
+				$( window ).on( 'scroll', function( args, retrigger ) {
 					if( retrigger || $(window).scrollTop() + $(window).height() > $( '#backbone_grid-container' ).height() - 100 ) {
 							$( window ).off( 'scroll' );
 							console.log( 'scroll' );
@@ -382,11 +382,14 @@ window.wp = window.wp || {};
 								if ( ! _.isEmpty( results ) ) {
 									self.loadedCount += self.pagelimit;
 									self.backboneGrid.render();
-									self.watchForScroll();
+									self.watchForScroll( retrigger );
 								}
 						});
 					}
 				});
+				if ( retrigger ) {
+					$( window ).trigger( 'scroll', true );
+				}
 			},
 
 			initialize: function() {
