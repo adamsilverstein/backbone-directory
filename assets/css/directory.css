@@ -44,7 +44,7 @@
 .backbone_person-card .backbone_person-name {
 }
 
-.backbone_person-card:hover {
+.backbone_person-card:focus {
 	background-color: #eaeba1;
 	transition: background 0.5s linear;
 }
@@ -53,7 +53,7 @@
 	color: #180565;
 }
 
-.backbone_person-card a:hover {
+.backbone_person-card a:focus {
 	color: #0f27c7;
 }
 
