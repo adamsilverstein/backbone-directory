@@ -95,6 +95,7 @@ module.exports = function( grunt ) {
 				files: ['assets/css/sass/*.scss'],
 				tasks: ['sass', 'cssmin'],
 				options: {
+					livereload:    true,
 					debounceDelay: 500
 				}
 			},
@@ -103,6 +104,7 @@ module.exports = function( grunt ) {
 				files: ['assets/js/src/**/*.js', 'assets/js/vendor/**/*.js'],
 				tasks: ['jshint', 'concat', 'uglify'],
 				options: {
+					livereload:    true,
 					debounceDelay: 500
 				}
 			}
