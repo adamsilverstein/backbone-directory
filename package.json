@@ -2,7 +2,7 @@
   "name": "backbone_-directory",
   "title": "backbone_ Directory",
   "description": "An interactive Backbone backbone_ Directory",
-  "version": "0.1.0",
+  "version": "0.9.3",
   "homepage": "http://wordpress.org/plugins",
   "author": {
     "name": "Adam Silverstein",
@@ -15,7 +15,7 @@
     "grunt-contrib-cssmin": "~0.6.0",
     "grunt-contrib-jshint": "~0.1.1",
     "grunt-contrib-nodeunit": "~0.1.2",
-    "grunt-contrib-watch": "~0.2.0",
+    "grunt-contrib-watch": "~0.6.1",
     "grunt-contrib-clean": "~0.5.0",
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-compress": "~0.5.2",
