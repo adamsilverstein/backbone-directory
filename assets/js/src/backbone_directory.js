@@ -313,15 +313,28 @@ window.wp = window.wp || {};
 		 */
 		BackboneDirectoryApp = {
 
+			pagelimit:   5,
+			loadedCount: 0,
+
+			fetch: function( offset ) {
+				this.backbonePeople.url = '/wp-json/posts?filter[posts_per_page]=' +
+					this.pagelimit +
+					' &filter[order]=ASC&filter[offset]=' +
+					offset +
+					'&type=backbonedirectory';
+
+				return this.backbonePeople.fetch( { remove: false } );
+			},
+
 			initialize: function() {
 				var self = this, users, imgsrc, gravhash, fetched, fetched2,
 					$loadcount = $( '#backbone_directory_loading_count' );
 
 				self.backbonePeople = new BackbonePersonCollection( );
-				self.backbonePeople.url = '/wp-json/posts?filter[posts_per_page]=1000&filter[order]=ASC&filter[offset]=22&type=backbonedirectory';
 
-				fetched = self.backbonePeople.fetch();
+				fetched = this.fetch( 0 );
 				fetched.done( function( results ) {
+					self.loadedCount += self.pagelimit;
 					console.log( results );
 					self.backboneRouter = new BackboneRouter();
 					self.backbonePersonDisp = new BackbonePersonDisplay( {
