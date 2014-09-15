@@ -18,19 +18,8 @@ window.wp = window.wp || {};
 		 */
 		var BackbonePerson = Backbone.Model.extend({
 
-			initialize: function( singleData ) {
+			initialize: function() {
 
-				if ( 'undefined' === typeof singleData ) {
-					return;
-				}
-
-				this.set( {
-								'name':       singleData.name,
-								'emailhash':  singleData.emailhash,
-								'twitterurl': singleData.twitterurl,
-								'twittertxt': singleData.twittertxt,
-								'atendeeUrl': singleData.atendeeUrl
-							} );
 			}
 		}),
 
