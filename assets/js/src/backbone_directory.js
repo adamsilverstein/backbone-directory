@@ -160,7 +160,7 @@ window.wp = window.wp || {};
 
 			render: function() {
 				var self = this;
-				this.backboneRouter.navigate( '?details=' + this.model.get( 'name' ), { replace: false } );
+				this.backboneRouter.navigate( '?details=' + this.model.get( 'title' ), { replace: false } );
 
 				console.log( 'BackbonePersonDetail render ' );
 				this.$el.html( this.template( this.model.attributes ) );
@@ -257,7 +257,7 @@ window.wp = window.wp || {};
 					gridmodels = this.backbonePeople.models;
 				} else {
 					gridmodels = _.filter( this.backbonePeople.models, function( theModel ) {
-						return ( -1 !== theModel.get( 'name' ).toLowerCase().indexOf( search ) );
+						return ( -1 !== theModel.get( 'title' ).toLowerCase().indexOf( search ) );
 					} );
 				}
 				var newmodels = '', newEl = '';
@@ -294,7 +294,7 @@ window.wp = window.wp || {};
 			openbackbonePerson: function( name ) {
 				console.log( 'route: ' + name + ' ' );
 				// find the model
-				BackboneDirectoryApp.personDetail.model = BackboneDirectoryApp.backbonePeople.where({ 'name': name })[0];
+				BackboneDirectoryApp.personDetail.model = BackboneDirectoryApp.backbonePeople.where({ 'title': name })[0];
 				BackboneDirectoryApp.personDetail.render();
 
 			},
