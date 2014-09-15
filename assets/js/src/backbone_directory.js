@@ -200,6 +200,10 @@ window.wp = window.wp || {};
 				console.log( 'BackbonePersonDetail render ' );
 				this.$el.html( this.template( this.model.attributes ) );
 				this.showPersonDetailDialog();
+				// Set the focus
+				var focusElement = '#backbone_person-' + this.model.get( 'ID' );
+				console.log( focusElement );
+				$( focusElement ).focus();
 				return this;
 			}
 		}),
