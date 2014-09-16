@@ -81,6 +81,7 @@ window.wp = window.wp || {};
 				this.listenTo( this.backboneGrid, 'detailView', this.personDetail );
 				this.listenTo( this.backboneGrid, 'syncModel', this.syncModel );
 				this.listenTo( this.backboneGrid, 'closeModal', this.hidePersonDetailDialog );
+				this.$el.hide();
 			},
 
 			// Show detail for the person who was just triggered
@@ -94,11 +95,12 @@ window.wp = window.wp || {};
 			// Set the model to match
 			syncModel: function( personModel ) {
 				console.log( 'syncModel' );
+				if ( this.$el.is(':hidden') ) {
+					return;
+				}
 				this.model = personModel;
 				this.render();
 			},
-
-
 
 			showPersonDetailDialog: function() {
 				// If the modal is hidden, fade it in
@@ -113,11 +115,12 @@ window.wp = window.wp || {};
 
 			render: function() {
 				var self = this;
-				this.backboneRouter.navigate( '?details=' + this.model.get( 'title' ), { replace: false } );
+				if ( ! _.isUndefined( this.model.get( 'title' ) ) ) {
+					this.backboneRouter.navigate( '?details=' + this.model.get( 'title' ), { replace: false, trigger: false } );
+				}
 
 				console.log( 'BackbonePersonDetail render ' );
 				this.$el.html( this.template( this.model.attributes ) );
-				// Set the focus
 				return this;
 			}
 		}),
@@ -285,11 +288,12 @@ window.wp = window.wp || {};
 					return;
 				}
 
-				if ( 39 === event.keyCode ) { /* right */
+				if ( 39 === event.keyCode || 9 === event.keyCode && ( ! event.shiftKey ) ) { /* right or tab */
+					console.log( 'gonext' );
 					_.once( this.goNext() );
 				}
 
-				if ( 37 === event.keyCode ) { /* left */
+				if ( 37 === event.keyCode || ( 9 === event.keyCode && event.shiftKey )) { /* left or shift-tab */
 					_.once( this.goPrevious() );
 				}
 
@@ -324,6 +328,10 @@ window.wp = window.wp || {};
 				console.log( ' gridrender complete ' );
 
 				self.$el.parent().find( '#backbone-person-count>span' ).html( gridmodels.length );
+
+				if ( _.isUndefined( self.model.get( 'ID' ) ) ) {
+					self.model = self.backbonePeople.first();
+				}
 				var focusElement = '#backbone_person-' + self.model.get( 'ID' );
 				console.log( focusElement );
 				$( focusElement ).focus();
@@ -421,7 +429,6 @@ window.wp = window.wp || {};
 				fetched = this.fetch( self.loadedCount );
 				fetched.done( function( results ) {
 					self.loadedCount += self.pagelimit;
-					console.log( results );
 					self.backboneRouter = new BackboneRouter();
 					self.backbonePersonDisp = new BackbonePersonDisplay( {
 						model: new BackbonePerson()
