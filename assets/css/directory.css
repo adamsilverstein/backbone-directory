@@ -46,7 +46,7 @@
 
 .backbone_person-card:focus {
 	background-color: #eaeba1;
-	transition: background 0.5s linear;
+	transition: background 0.2s linear;
 }
 
 .backbone_person-card a {
