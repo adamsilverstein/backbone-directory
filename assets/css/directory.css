@@ -44,9 +44,12 @@
 .backbone_person-card .backbone_person-name {
 }
 
+.entry-content #backbone_search input {
+	margin: 0;
+}
+
 .backbone_person-card:focus {
 	background-color: #eaeba1;
-	transition: background 0.2s linear;
 }
 
 .backbone_person-card a {
@@ -99,7 +102,7 @@ input#backbone_person-search-field:focus {
 }
 
 .backbone_person_detail-name {
-	font-size: 32px;
+	font-size: 28px;
 	font-weight: bold;
 	margin: 8px;
 }
@@ -117,7 +120,7 @@ input#backbone_person-search-field:focus {
 	margin-left: 470px;
 	padding-top: 1px;
 	position: absolute;
-	line-height: 42px;
+	line-height: 34px;
 	vertical-align: middle;
 }
 

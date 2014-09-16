@@ -77,7 +77,6 @@ window.wp = window.wp || {};
 				var self = this;
 				this.backboneGrid   = options.backboneGrid;
 				this.backbonePeople = options.backbonePeople;
-				this.backboneRouter = options.backboneRouter;
 				this.listenTo( this.backboneGrid, 'detailView', this.personDetail );
 				this.listenTo( this.backboneGrid, 'syncModel', this.syncModel );
 				this.listenTo( this.backboneGrid, 'closeModal', this.hidePersonDetailDialog );
@@ -88,6 +87,7 @@ window.wp = window.wp || {};
 			personDetail: function( personModel ) {
 				console.log( 'personDetail' );
 				this.model = personModel;
+				this.updateURL();
 				this.render();
 				this.showPersonDetailDialog();
 			},
@@ -99,6 +99,7 @@ window.wp = window.wp || {};
 					return;
 				}
 				this.model = personModel;
+				this.updateURL();
 				this.render();
 			},
 
@@ -113,14 +114,26 @@ window.wp = window.wp || {};
 				this.$el.fadeOut( 'fast' );
 			},
 
-			render: function() {
-				var self = this;
+			updateURL: function() {
 				if ( ! _.isUndefined( this.model.get( 'title' ) ) ) {
 					this.backboneRouter.navigate( '?details=' + this.model.get( 'title' ), { replace: false, trigger: false } );
 				}
+			},
+
+			render: function() {
+				var self = this;
+
 
 				console.log( 'BackbonePersonDetail render ' );
 				this.$el.html( this.template( this.model.attributes ) );
+
+				// Are we missing any attributes?
+				if ( _.isUndefined( this.model.get( 'aboutMe' ) ) ){
+					$.ajax( {
+						//url = '//gravatar.com/'
+					});
+				}
+
 				return this;
 			}
 		}),
@@ -201,6 +214,12 @@ window.wp = window.wp || {};
 				$( document ).on( 'keyup', _.throttle( function( e ){
 					self.keyPress( e );
 				}, 125 ) );
+				this.listenTo( this, 'syncBGModel', this.syncModel );
+
+			},
+
+			syncModel: function( model ) {
+				this.model = model;
 			},
 
 			searchChanged: function() {
@@ -306,6 +325,12 @@ window.wp = window.wp || {};
 				}
 			},
 
+			focusSelected: function() {
+				var focusElement = '#backbone_person-' + this.model.get( 'ID' );
+				console.log( focusElement );
+				$( focusElement ).focus();
+			},
+
 			render: function() {
 				var self = this,
 					gridmodels,
@@ -332,9 +357,7 @@ window.wp = window.wp || {};
 				if ( _.isUndefined( self.model.get( 'ID' ) ) ) {
 					self.model = self.backbonePeople.first();
 				}
-				var focusElement = '#backbone_person-' + self.model.get( 'ID' );
-				console.log( focusElement );
-				$( focusElement ).focus();
+				this.focusSelected();
 				this.trigger( 'syncModel', this.model );
 
 			}
@@ -360,8 +383,9 @@ window.wp = window.wp || {};
 			openbackbonePerson: function( name ) {
 				console.log( 'route: ' + name + ' ' );
 				// find the model
-				BackboneDirectoryApp.personDetail.model = BackboneDirectoryApp.backbonePeople.where({ 'title': name })[0];
-				BackboneDirectoryApp.personDetail.render();
+				var model = BackboneDirectoryApp.backbonePeople.where( { 'title': name } )[0];
+				BackboneDirectoryApp.backboneGrid.trigger( 'syncBGModel', model );
+				BackboneDirectoryApp.backboneGrid.trigger( 'detailView', model );
 
 			},
 
@@ -429,7 +453,6 @@ window.wp = window.wp || {};
 				fetched = this.fetch( self.loadedCount );
 				fetched.done( function( results ) {
 					self.loadedCount += self.pagelimit;
-					self.backboneRouter = new BackboneRouter();
 					self.backbonePersonDisp = new BackbonePersonDisplay( {
 						model: new BackbonePerson()
 					});
@@ -450,7 +473,7 @@ window.wp = window.wp || {};
 					self.backboneGrid.render();
 					self.recalcModelsPerRow();
 					self.watchForScroll();
-
+					$( self ).trigger( 'finishLoad' );
 				});
 
 
@@ -463,10 +486,18 @@ window.wp = window.wp || {};
 					self.recalcModelsPerRow();
 				}, 150 ) );
 
-				Backbone.history.start( {
-					pushState: true,
-					root:      window.location.pathname
-					} );
+				$( self ).on( 'finishLoad', function(){
+					console.log( 'finishLoad' );
+					self.backboneRouter = new BackboneRouter();
+					self.personDetail.backboneRouter = self.backboneRouter;
+					Backbone.history.start( {
+						pushState: true,
+						root:      window.location.pathname,
+						silent:    false
+					});
+					self.backboneGrid.focusSelected();
+				});
+
 			}
 		};
 
