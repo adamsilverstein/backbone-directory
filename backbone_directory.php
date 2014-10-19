@@ -77,6 +77,12 @@ function backbone_directory_init() {
 	}, 10, 3 );
 
 }
+	// Allow offset parameter
+	// @todo limit the filter to just our cpt
+	add_filter( 'json_query_vars', function( $vars ){
+		array_push( $vars, 'offset' );
+		return $vars;
+	});
 
 add_action('admin_enqueue_scripts', 'bacbkbone_admin_enqueue_scripts');
 function bacbkbone_admin_enqueue_scripts( $arg ) {

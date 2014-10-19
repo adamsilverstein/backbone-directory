@@ -323,6 +323,7 @@ window.wp = window.wp || {};
 				if ( 40 === event.keyCode ) { /* down */
 					_.once( this.goNextRow() );
 				}
+				this.focusSelected();
 			},
 
 			focusSelected: function() {
@@ -419,7 +420,7 @@ window.wp = window.wp || {};
 			watchForScroll: function( retrigger ) {
 				var self = this;
 				$( window ).on( 'scroll', function( args, retrigger ) {
-					if( retrigger || $(window).scrollTop() + $(window).height() > $( '#backbone_grid-container' ).height() - 100 ) {
+					if( retrigger || $(window).scrollTop() + $(window).height() > $( '#backbone_grid-container' ).height() - 200 ) {
 							$( window ).off( 'scroll' );
 							console.log( 'scroll' );
 							var fetched = self.fetch( self.loadedCount );
@@ -428,6 +429,8 @@ window.wp = window.wp || {};
 									self.loadedCount += self.pagelimit;
 									self.backboneGrid.render();
 									self.watchForScroll( retrigger );
+									console.log( $(document).height() );
+									$("html, body").animate({ scrollTop: ( $(document).height() - $(window).height() - 500 ) }, 100);
 								}
 						});
 					}
