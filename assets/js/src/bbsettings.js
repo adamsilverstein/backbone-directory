@@ -21,15 +21,18 @@
 			users = $( 'ul.tix-attendee-list li', $( directoryPageHTML ) );
 			$results.append( '<br />' + bbSettings.localUsers + users.length );
 
-			var sendUser = function( user ) {
+			var sendUser = function( user, index ) {
 				var $user = $( user ),
+					atendeeUrl = $user.find( 'a.tix-attendee-url' ).attr( 'href' ),
+					emailHash  = $user.find( 'img' ).attr ( 'src' ).match( /avatar\/(.*)\?.*/i )[1],
 					userdata = {
+
 						imgsrc     : $user.find( 'img' ).attr ( 'src' ),
-						emailhash  : $user.find( 'img' ).attr ( 'src' ).match( /avatar\/(.*)\?.*/i )[1],
+						emailhash  : emailHash,
 						name       : $user.find( '.tix-attendee-name' ).text().trim(),
 						twitterurl : $user.find( 'a.tix-attendee-twitter' ).attr( 'href' ),
 						twittertxt : $user.find( 'a.tix-attendee-twitter' ).text().trim(),
-						atendeeUrl : $user.find( 'a.tix-attendee-url' ).attr( 'href' )
+						atendeeUrl : atendeeUrl
 					};
 
 				return $.ajax({
@@ -38,18 +41,20 @@
 						data: {
 							'_ajax_nonce': bbSettings.insertnonce,
 							'action':      'backbone_insert_user',
-							'userdata':    userdata
+							'userdata':    userdata,
+							'restart':       ( 0 === index ) ? '1' : ''
 						}
 					});
+
 			};
 
 			var processAllUsers = function( index ) {
-				var user = sendUser( users[ index ] );
+				var user = sendUser( users[ index ], index );
 				index++;
 				user.always(function() {
-					console.log( index );
+					jQuery( '.backbone-user-import-results>span' ).text( ' ' + index );
 					//if ( index < 5 ) {
-						window.setTimeout( processAllUsers( index ), 1000 );
+						window.setTimeout( processAllUsers( index ), 500 );
 					//}
 				});
 			};

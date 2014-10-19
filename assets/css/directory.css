@@ -19,7 +19,7 @@
 	margin: 3px;
 	padding: 3px;
 	float: left;
-	font-size: 20px;
+	font-size: 18px;
 	line-height: 24px;
 }
 
@@ -72,16 +72,29 @@ input#backbone_person-search-field:focus {
 
 .backbone_person_detail-card {
 	max-width: 90%;
-	max-height: 90%;
-	min-height: 150px;
-	min-width: 38%;
+	min-height: 160px;
+	min-width: 45%;
 	background-color: #eee;
 	border: 1px solid #333;
 	z-index: 100000;
 	position: fixed;
 	margin: 0 30%;
 	display: inline-block;
+	padding: 5px;
 }
+
+.backbone_person-currentLocation {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.backbone_person-aboutMe {
+	font-size: 14px;
+	line-height: 16px;
+	font-family: 'Arial';
+	margin-top: 10px;
+}
+
 
 .backbone_card_detail_container {
 	display: none;
@@ -99,13 +112,15 @@ input#backbone_person-search-field:focus {
 }
 
 .backbone_person_detail-name {
-	font-size: 32px;
+	font-size: 25px;
 	font-weight: bold;
-	margin: 8px;
+	margin: 5px;
 }
 
 .backbone_person_detail-twittertxt {
-	font-size: 24px;
+	font-size: 18px;
+	max-width: 40%;
+	float: right;
 }
 
 #backbone_grid-container #backbone-person-count {
