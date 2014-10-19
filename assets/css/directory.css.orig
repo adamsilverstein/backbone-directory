@@ -19,7 +19,7 @@
 	margin: 3px;
 	padding: 3px;
 	float: left;
-	font-size: 20px;
+	font-size: 18px;
 	line-height: 24px;
 }
 
@@ -114,13 +114,12 @@ input#backbone_person-search-field:focus {
 	padding-top: 40px;
 }
 
-.backbone_person-name {
-
-	display: block
-}
-
 .backbone_person_detail-name {
+<<<<<<< HEAD
 	font-size: 28px;
+=======
+	font-size: 25px;
+>>>>>>> master
 	font-weight: bold;
 	margin: 5px;
 }
@@ -140,7 +139,7 @@ input#backbone_person-search-field:focus {
 	margin-left: 470px;
 	padding-top: 1px;
 	position: absolute;
-	line-height: 42px;
+	line-height: 34px;
 	vertical-align: middle;
 }
 

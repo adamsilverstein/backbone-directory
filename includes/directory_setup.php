@@ -39,6 +39,8 @@ function displaybackbone_directory(){
 
 	}
 	// Enqueue plugin JavaScript
+	wp_enqueue_script( 'fittext', backbone_DIRECTORY_URL . 'assets/js/vendor/jquery.textfill.min.js', array( 'jquery' ), '1.0.0', true );
+
 	wp_enqueue_script( 'backbone_directory', backbone_DIRECTORY_URL . 'assets/js/src/backbone_directory.js', array( 'wp-backbone', 'hoverIntent' ), '1.0.0', true );
 
 	// Enqueue plugin css & Dashicons
@@ -62,11 +64,11 @@ function displaybackbone_directory(){
 </div>
 
 <script id="tmpl-backbone_person" type="text/html">
-		<div class="backbone_person-card" tabindex=0>
+		<div class="backbone_person-card" id="backbone_person-{{ data.ID }}" tabindex=0>
 			<div class="backbone_person-gravatar">
 				<img src="http://www.gravatar.com/avatar/{{ data.usermeta.emailhash }}"  width="64" height="64">
 			</div>
-			<div class="backbone_person-name">
+			<div class="backbone_person-name" style='width:190px; padding-left:70px;'>
 				<span>{{ data.title }}</span>
 			</div>
 			<div class="backbone_person-twittertxt">
