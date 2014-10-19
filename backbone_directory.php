@@ -44,6 +44,8 @@ define( 'backbone_TRANSIENT_HASH',    '0010024' );
 // Kailey's API key. It's free and good for 1000 calls per day. Or get another one here: https://developer.forecast.io/register
 define( 'backbone_DIRECTORY_FORECASTIO_APIKEY', 'eeb9e190650f8cf3b7328f2ae2986788' );
 
+define( 'IMPORT_URL', 'http://2014.nyc.wordcamp.org/attendees/' );
+
 include( backbone_DIRECTORY_PATH . 'includes/wp-tlc-transients/tlc-transients.php' );
 include( backbone_DIRECTORY_PATH . 'includes/directory_setup.php' );
 /**
@@ -51,6 +53,7 @@ include( backbone_DIRECTORY_PATH . 'includes/directory_setup.php' );
  * - Registers the default textdomain.
  */
 function backbone_directory_init() {
+	get_data_from_google_doc();
 	$locale = apply_filters( 'plugin_locale', get_locale(), 'backbone_directory' );
 	load_textdomain( 'backbone_directory', WP_LANG_DIR . '/backbone_directory/backbone_directory-' . $locale . '.mo' );
 	load_plugin_textdomain( 'backbone_directory', false, backbone_DIRECTORY_URL . '/languages/' );
@@ -58,8 +61,7 @@ function backbone_directory_init() {
 	register_post_type( 'backbonedirectory', array(
 		'label'  => __( 'Backbone Directory', 'backbone_directory' ),
 		'public' => true,
-		'supports' => array( 'title', 'editor', 'custom-fields' )
-
+		'supports' => array( 'title', 'editor', 'custom-fields' ),
 		)
 	);
 	add_action( 'wp_ajax_backbone_load_directory_data', 'backbone_load_directory_data' );
@@ -101,19 +103,91 @@ function bacbkbone_admin_enqueue_scripts( $arg ) {
 		'backbone_directory_settings',
 		'bbSettings',
 		array(
-			'importUsers'   => __( 'Import Backbone Users', 'backbone_directory' ),
-			'closeImporter' => __( 'Close Importer', 'backbone_directory' ),
-			'results'       => __( 'Results:', 'backbone_directory' ),
-			'restAPI'       => site_url() . '/wp-json/',
-			'localUsers'    => __( 'Local Users: ', 'backbone_directory' ),
-			'insertnonce'   => wp_create_nonce( 'insertbackboneuser' ),
+			'importUsers'       => __( 'Import Backbone Users', 'backbone_directory' ),
+			'closeImporter'     => __( 'Close Importer', 'backbone_directory' ),
+			'results'           => __( 'Results:', 'backbone_directory' ),
+			'restAPI'           => site_url() . '/wp-json/',
+			'localUsers'        => __( 'Local Users: ', 'backbone_directory' ),
+			'insertnonce'       => wp_create_nonce( 'insertbackboneuser' ),
+			'importurl'         => IMPORT_URL,
+			'atendeePageScrape' => 'Scrape WordCamp atendee page:',
+			'importGoogleDoc'   => 'Import from Google doc:',
+			'gdockey'           => 'Google document key',
+			'gusername'         => 'Google username',
+			'gpassword'         => 'Google password',
 			)
 		);
-	wp_localize_script( 'backbone_directory_settings', 'directoryPageHTML', bd_get_directory_html() );
+
+	$cached_transient_key = 'backbone_directory_directory_data_b_' . backbone_TRANSIENT_HASH;
+
+	if ( false === ( $directory_html = get_transient( $cached_transient_key ) ) ) {
+ 		error_log( 'blank cache' );
+		// force a new get
+		$directory_html =  bd_get_directory_html();
+		set_transient( $cached_transient_key, $directory_html, DAY_IN_SECONDS );
+	} else {
+		error_log( 'using cached copy' );
+	}
+
+	if ( '' !== $directory_html ) {
+		wp_localize_script( 'backbone_directory', 'directoryPageHTML', $directory_html );
+	}
 
 	wp_enqueue_style( 'styles', backbone_DIRECTORY_URL . 'assets/css/backbone_directory.css' );
 
 
+}
+
+/**
+ * Get Data from google doc
+ */
+function get_data_from_google_doc() {
+
+	$glogin    = "adam.silverstein@get10up.com";
+	$gpassword = "9MZ0eMarWv3ZmkWOrVFBANQatnl3Oy";
+	$gkey      = "0Agybh5H-DfZ3dEhfRDhSdXhGVUVub1doY3NVaFppaFE";
+
+	$keyquery  = 'https://www.google.com/accounts/ClientLogin?Email=' . $glogin . '&Passwd=' . $gpassword . '&accountType=GOOGLE&service=wise';
+	$keydata   = wp_remote_retrieve_body( wp_remote_get( $keyquery ) );
+	$authpos   = strpos( $keydata, 'Auth=' );
+	$keydata   = substr( $keydata, $authpos );//, $lsidpos - $authpos - 1 );
+	$sheeturl  = 'https://spreadsheets.google.com/feeds/cells/0Agybh5H-DfZ3dEhfRDhSdXhGVUVub1doY3NVaFppaFE/od6/private/full';
+	$headers   = array( 'Authorization' => 'GoogleLogin ' .  $keydata, 'GData-Version' => 2, 'format' => 'xml' );
+ 	$sheetdata = wp_remote_retrieve_body( wp_remote_get( $sheeturl, array( 'headers' => $headers ) ) );
+	$xml       = new SimpleXMLElement( $sheetdata );
+	$max       = 14;
+	$the_row   = -1; /* Start with -1 because this gets bumped immediately to 0 on the 1st iteration */
+	$user_data = array();
+	$fields    = array();
+
+	foreach ( $xml->entry as $entry ) {
+		//var_dump($entry);
+		$attributes = (string) $entry->{"content"};
+		$originaltitle = $title = (string) $entry->{"title"};
+
+		// If this is the first row of data, its the column titles
+		// Grab the number part of the column name
+		$column = letter_to_number( preg_replace( '/[0-9]/', '', $title ) ) - 1;
+
+		// Every row must have a column 1!
+		if ( 0 === $column ) {
+			// First column, so bump the row
+			$the_row++;
+			//echo '<br />';
+		}
+
+		// The first row is just the field names
+		if ( 0 === $the_row ) {
+			$fields[    $column ] = $attributes;
+			//var_dum  p($user_data);
+			//echo $column . ' - ' . $attributes . ' == ' . $originaltitle . '; ';
+		} else {
+			$user_data[ $the_row ][ $column ] = $attributes;
+		}
+
+	}
+
+	//var_dump($user_data);
 }
 
 /**
