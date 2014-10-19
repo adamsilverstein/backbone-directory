@@ -85,16 +85,21 @@ function displaybackbone_directory(){
 			<div class="backbone_person_detail-gravatar">
 				<img src='http://www.gravatar.com/avatar/{{ data.usermeta.emailhash }}?s=128' width="128" height="128">
 			</div>
-			<a class="icon" href="{{ data.usermeta.twitterurl }}" target="_blank"></a>
-			<a class="icon" href="{{ data.usermeta.atendeeUrl }}" target="_blank"></a>
+			<div class="backbone_person_detail-twittertxt">
+				<a href="{{ data.usermeta.twitterurl }}" target="_blank">
+					<span>{{ data.usermeta.twittertxt }}</span>
+				</a>
+			</div>
 			<div class="backbone_person_detail-name">
 				<span>{{ data.title }}</span>
 			</div>
-			<a href="{{ data.usermeta.twitterurl }}" target="_blank">
-				<div class="backbone_person_detail-twittertxt">
-					<span>{{ data.usermeta.twittertxt }}</span>
-				</div>
-			</a>
+			<div class="backbone_person-currentLocation">
+				{{ data.usermeta.currentLocation }}
+			</div>
+			<div class="backbone_person-aboutMe">
+				{{ data.usermeta.aboutMe }}
+			</div>
+
 		</div>
 </script>
 

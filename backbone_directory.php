@@ -66,10 +66,12 @@ function backbone_directory_init() {
 	add_action( 'wp_ajax_backbone_insert_user', 'backbone_insert_user' );
 	add_filter( 'json_prepare_post', function ($data, $post, $context) {
 		$data['usermeta'] = array(
-			'imgsrc'     => get_post_meta( $post['ID'], 'imgsrc', true ),
-			'emailhash'  => get_post_meta( $post['ID'], 'emailhash', true ),
-			'twittertxt' => get_post_meta( $post['ID'], 'twittertxt', true ),
-			'atendeeUrl' => get_post_meta( $post['ID'], 'atendeeUrl', true ),
+			'imgsrc'          => get_post_meta( $post['ID'], 'imgsrc', true ),
+			'emailhash'       => get_post_meta( $post['ID'], 'emailhash', true ),
+			'twittertxt'      => get_post_meta( $post['ID'], 'twittertxt', true ),
+			'atendeeUrl'      => get_post_meta( $post['ID'], 'atendeeUrl', true ),
+			'currentLocation' => get_post_meta( $post['ID'], 'currentLocation', true ),
+			'aboutMe'         => get_post_meta( $post['ID'], 'aboutMe', true ),
 		);
 		return $data;
 	}, 10, 3 );
@@ -111,19 +113,53 @@ function bacbkbone_admin_enqueue_scripts( $arg ) {
 }
 
 /**
+ * Get the gravatar data for a specific gravatar hash, with caching
+ */
+function get_gravatar_data( $emailHash ) {
+
+	if ( '' === $emailHash ) {
+		return '';
+	}
+
+	$gravatar_transient_key = 'gtk_' . $emailHash;
+	if ( false === ( $gdata = get_transient( $gravatar_transient_key ) ) ){
+		$url = 'http://en.gravatar.com/' . sanitize_key( $emailHash ) . '.json';
+
+		$gdata = json_decode( wp_remote_retrieve_body( wp_remote_get( $url ) ) );
+	}
+
+	return $gdata;
+
+}
+
+/**
  * Ajax callback to insert a new user
  */
 function backbone_insert_user() {
 	check_ajax_referer( 'insertbackboneuser' );
+	global $wpdb;
 
-	$query = "
-		DELETE FROM wp_posts
-		WHERE post_type = 'backbonedirectory'
-		";
+	// Reset the data?
+	if ( isset( $_POST['restart'] ) && '1' === $_POST['restart'] ) {
+		$query = "
+			DELETE FROM wp_posts
+			WHERE post_type = 'backbonedirectory'
+			";
 
-	$wpdb->query($query);
+		$wpdb->query($query);
+	}
 
 	$userdata = $_POST[ 'userdata' ];
+	// Get the gravatar data if available
+	if ( isset( $userdata[ 'emailhash'] ) ) {
+		$gravatar_data = get_gravatar_data( $userdata[ 'emailhash'] );
+		var_dump($gravatar_data->entry[0]);
+		$gdata = $gravatar_data->entry[0];
+		$userdata[ 'aboutMe' ] = isset( $gdata->aboutMe ) ? $gdata->aboutMe : '';
+		$userdata[ 'currentLocation' ] = isset( $gdata->currentLocation ) ? $gdata->currentLocation : '';
+	}
+
+
 
 	$newpost = wp_insert_post( array(
 		'post_title'  => esc_attr( $userdata[ 'name' ] ),
@@ -133,25 +169,37 @@ function backbone_insert_user() {
 	add_post_meta(
 		$newpost,
 		'imgsrc',
-		$userdata[ 'imgsrc' ],
+		isset( $userdata[ 'imgsrc' ] ) ? sanitize_text_field( $userdata[ 'imgsrc' ] ) : '',
 		true
 	);
 	add_post_meta(
 		$newpost,
 		'emailhash',
-		$userdata[ 'emailhash' ],
+		isset( $userdata[ 'emailhash' ] ) ? sanitize_text_field( $userdata[ 'emailhash' ] ) : '',
 		true
 	);
 	add_post_meta(
 		$newpost,
 		'twittertxt',
-		$userdata[ 'twittertxt' ],
+		isset( $userdata[ 'twittertxt' ] ) ? sanitize_text_field( $userdata[ 'twittertxt' ] ) : '',
 		true
 	);
 	add_post_meta(
 		$newpost,
 		'atendeeUrl',
-		$userdata[ 'atendeeUrl' ],
+		isset( $userdata[ 'atendeeUrl' ] ) ? sanitize_text_field( $userdata[ 'atendeeUrl' ] ) : '',
+		true
+	);
+	add_post_meta(
+		$newpost,
+		'aboutMe',
+		isset( $userdata[ 'aboutMe' ] ) ? sanitize_text_field( $userdata[ 'aboutMe' ] ) : '',
+		true
+	);
+	add_post_meta(
+		$newpost,
+		'currentLocation',
+		isset( $userdata[ 'currentLocation' ] ) ? sanitize_text_field( $userdata[ 'currentLocation' ] ) : '',
 		true
 	);
 
