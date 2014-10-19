@@ -4,7 +4,7 @@
  */
 function bd_get_directory_html() {
 	error_log( 'bd_get_directory_html ');
-	$directory_remote_url = 'http://2014.nyc.wordcamp.org/attendees/';
+	$directory_remote_url = IMPORT_URL;
 	$attendee_page_html = wp_remote_retrieve_body( wp_remote_get( $directory_remote_url ) );
 	return $attendee_page_html;
 }
@@ -16,28 +16,6 @@ function displaybackbone_directory(){
 	if ( is_admin() ){
 		return;
 	}
-	$cached_transient_key = 'backbone_directory_directory_data_b_' . backbone_TRANSIENT_HASH;
-
-	// Use tlc transients to get the last cached data
-	$directory_html = tlc_transient( $cached_transient_key )
-		->updates_with( 'bd_get_directory_html' )
-		->expires_in( DAY_IN_SECONDS )
-		->get();
-
-	if ( '' === $directory_html ) {
-		error_log( 'blank cache' );
-		// force a new get
-		$directory_html = tlc_transient( $cached_transient_key )
-			->updates_with( 'bd_get_directory_html' )
-			->background_only()
-			->get();
-
-	}
-	if ( '' === $directory_html ) {
-			error_log('local data enqueue');
-			wp_enqueue_script( 'local_data', backbone_DIRECTORY_URL . 'localdata.js', array( 'jquery' ), '1.0.0', true );
-
-	}
 	// Enqueue plugin JavaScript
 	wp_enqueue_script( 'backbone_directory', backbone_DIRECTORY_URL . 'assets/js/src/backbone_directory.js', array( 'wp-backbone', 'hoverIntent' ), '1.0.0', true );
 
@@ -45,9 +23,6 @@ function displaybackbone_directory(){
 	wp_enqueue_style( 'styles', backbone_DIRECTORY_URL . 'assets/css/directory.css' );
 	wp_enqueue_style( 'dashicons' );
 
-	if ( '' !== $directory_html ) {
-		wp_localize_script( 'backbone_directory', 'directoryPageHTML', $directory_html );
-	}
 ?>
 
 <div id="backbone_card" class="hidden"></div>
