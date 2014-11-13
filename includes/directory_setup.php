@@ -62,25 +62,29 @@ function displaybackbone_directory(){
 </div>
 
 <script id="tmpl-backbone_person" type="text/html">
-		<div class="backbone_person-card" tabindex=0>
+		<div class="backbone_person-card" tabindex=0 id="backbone_person-{{ data.ID }}">
+			<# if ( 'undefined' !== typeof data.usermeta ) { #>
 			<div class="backbone_person-gravatar">
 				<img src="http://www.gravatar.com/avatar/{{ data.usermeta.emailhash }}"  width="64" height="64">
 			</div>
+			<# } #>
 			<div class="backbone_person-name">
 				<span>{{ data.title }}</span>
 			</div>
+			<# if ( 'undefined' !== typeof data.usermeta ) { #>
 			<div class="backbone_person-twittertxt">
 				<span>{{ data.usermeta.twittertxt }}</span>
 			</div>
+			<# } #>
 		</div>
 </script>
 
 <script id="tmpl-backbone_person-search" type="text/html">
-<# console.log( 'model::' + this ); #>
 	<input id="backbone_person-search-field" type="text" placeholder="Search" value="{{ data }}">
 </script>
 
 <script id="tmpl-backbone_person_detail" type="text/html">
+	<# if ( 'undefined' !== typeof data.usermeta ) { #>
 		<div class="backbone_person_detail-card">
 			<div class="backbone_person_detail-gravatar">
 				<img src='http://www.gravatar.com/avatar/{{ data.usermeta.emailhash }}?s=128' width="128" height="128">
@@ -95,7 +99,11 @@ function displaybackbone_directory(){
 					<span>{{ data.usermeta.twittertxt }}</span>
 				</div>
 			</a>
+			<div class="backbone_person_detail-aboutme">
+				<span>{{ data.aboutMe }}</span>
+			</div>
 		</div>
+	<# } #>
 </script>
 
 

@@ -3,7 +3,7 @@
  * Plugin Name: Backbone Directory
  * Plugin URI:  http://wordpress.org/plugins
  * Description: An interactive Backbone Directory
- * Version:     0.9.1
+ * Version:     0.9.3
  * Author:      Adam Silverstein
  * Author URI:
  * License:     GPLv2+
@@ -36,7 +36,7 @@
  */
 
 // Useful global constants
-define( 'backbone_DIRECTORY_VERSION', '0.9.2' );
+define( 'backbone_DIRECTORY_VERSION', '0.9.3' );
 define( 'backbone_DIRECTORY_URL',     plugin_dir_url( __FILE__ ) );
 define( 'backbone_DIRECTORY_PATH',    dirname( __FILE__ ) . '/' );
 define( 'backbone_TRANSIENT_HASH',    '0010024' );
@@ -64,8 +64,8 @@ function backbone_directory_init() {
 	);
 	add_action( 'wp_ajax_backbone_load_directory_data', 'backbone_load_directory_data' );
 	add_action( 'wp_ajax_backbone_insert_user', 'backbone_insert_user' );
-	add_filter( 'json_prepare_post', function ($data, $post, $context) {
-		$data['usermeta'] = array(
+	add_filter( 'json_prepare_post', function ( $data, $post, $context ) {
+		$data[ 'usermeta' ] = array(
 			'imgsrc'     => get_post_meta( $post['ID'], 'imgsrc', true ),
 			'emailhash'  => get_post_meta( $post['ID'], 'emailhash', true ),
 			'twittertxt' => get_post_meta( $post['ID'], 'twittertxt', true ),
@@ -74,6 +74,12 @@ function backbone_directory_init() {
 		return $data;
 	}, 10, 3 );
 
+	// Allow offset parameter
+	// @todo limit the filter to just our cpt
+	add_filter( 'json_query_vars', function( $vars ){
+		array_push( $vars, 'offset' );
+		return $vars;
+			});
 }
 
 add_action('admin_enqueue_scripts', 'bacbkbone_admin_enqueue_scripts');
@@ -115,13 +121,6 @@ function bacbkbone_admin_enqueue_scripts( $arg ) {
  */
 function backbone_insert_user() {
 	check_ajax_referer( 'insertbackboneuser' );
-
-	$query = "
-		DELETE FROM wp_posts
-		WHERE post_type = 'backbonedirectory'
-		";
-
-	$wpdb->query($query);
 
 	$userdata = $_POST[ 'userdata' ];
 

@@ -18,19 +18,8 @@ window.wp = window.wp || {};
 		 */
 		var BackbonePerson = Backbone.Model.extend({
 
-			initialize: function( singleData ) {
+			initialize: function() {
 
-				if ( 'undefined' === typeof singleData ) {
-					return;
-				}
-
-				this.set( {
-								'name':       singleData.name,
-								'emailhash':  singleData.emailhash,
-								'twitterurl': singleData.twitterurl,
-								'twittertxt': singleData.twittertxt,
-								'atendeeUrl': singleData.atendeeUrl
-							} );
 			}
 		}),
 
@@ -88,22 +77,30 @@ window.wp = window.wp || {};
 				var self = this;
 				this.backboneGrid   = options.backboneGrid;
 				this.backbonePeople = options.backbonePeople;
-				this.backboneRouter = options.backboneRouter;
 				this.listenTo( this.backboneGrid, 'detailView', this.personDetail );
-				$( document ).on( 'keyup', _.throttle( function( e ){
-					self.keyPress( e );
-				}, 250 ) );
+				this.listenTo( this.backboneGrid, 'syncModel', this.syncModel );
+				this.listenTo( this.backboneGrid, 'closeModal', this.hidePersonDetailDialog );
+				this.$el.hide();
 			},
 
-			// Find and set the person who was just triggered
-			personDetail: function( person ) {
+			// Show detail for the person who was just triggered
+			personDetail: function( personModel ) {
 				console.log( 'personDetail' );
-				var $person    = $( person.currentTarget ),
-					name       = $person.find('.backbone_person-name>span').text();
-
-				this.model = this.backbonePeople.findWhere( { 'title': name } );
+				this.model = personModel;
+				this.updateURL();
 				this.render();
+				this.showPersonDetailDialog();
+			},
 
+			// Set the model to match
+			syncModel: function( personModel ) {
+				console.log( 'syncModel' );
+				if ( this.$el.is(':hidden') ) {
+					return;
+				}
+				this.model = personModel;
+				this.updateURL();
+				this.render();
 			},
 
 			showPersonDetailDialog: function() {
@@ -115,6 +112,130 @@ window.wp = window.wp || {};
 
 			hidePersonDetailDialog: function() {
 				this.$el.fadeOut( 'fast' );
+			},
+
+			updateURL: function() {
+				if ( ! _.isUndefined( this.model.get( 'title' ) ) ) {
+					this.backboneRouter.navigate( '?details=' + this.model.get( 'title' ), { replace: false, trigger: false } );
+				}
+			},
+
+			render: function() {
+				var self = this;
+
+
+				console.log( 'BackbonePersonDetail render ' );
+				this.$el.html( this.template( this.model.attributes ) );
+
+				// Are we missing any attributes?
+				if ( _.isUndefined( this.model.get( 'aboutMe' ) ) ){
+					$.ajax( {
+						//url = '//gravatar.com/'
+					});
+				}
+
+				return this;
+			}
+		}),
+
+		/**
+		 * The Search bar
+		 */
+		BackboneSearchbar = Backbone.View.extend({
+			backbonePeople: null, /* the collection of backbonePeople */
+			self:     this,
+			el:       '#backbone_search',
+			template: wp.template( 'backbone_person-search' ),
+			search:   '',
+
+			initialize: function( options ) {
+				var self = this,
+					backboneRouter = options.backboneRouter;
+				console.log( 'backbone_Searchbar.initialize ' );
+				this.backbonePeople = options.backbonePeople;
+				this.render();
+				this.$el.on( 'keypress', '#backbone_person-search-field',_.debounce( function(){
+					self.searchChange( this );
+				}, 250 ) );
+			},
+
+			events: {
+				'keypress #backbone_person-search-field':  'searchChange',
+				'focus #backbone_person-search-field':     'searchFocus'
+			},
+
+			searchChange: function( search ) {
+				var searchFor = this.$el.find( search ).prop('value');
+				console.log( 'searchchange ' + searchFor );
+				this.backbonePeople.searchFor( searchFor );
+			},
+
+			searchFocus: function() {
+				$( window ).trigger( 'scroll', true );
+			},
+
+			render: function() {
+				var self = this;
+				console.log( 'backbone_Searchbar:render ' );
+				var templatehtml = this.template( this.search );
+				this.$el.html( templatehtml );
+				return this;
+			}
+		}),
+		/**
+		 * The Grid view - displays the directory grid
+		 */
+		BackboneGrid = Backbone.View.extend({
+			backbonePeople: null, /* the collection of backbonePeople */
+			el:             '#backbone_grid',
+			msnry:          null,
+			template:       wp.template( 'backbone_person' ),
+			modelsPerRow:   3,
+
+			events: {
+				'click .backbone_person-card': 'clickackbonePerson'
+			},
+
+			clickackbonePerson: function( person ) {
+				console.log( 'triggering personDetail' );
+				var $person    = $( person.currentTarget ),
+					name       = $person.find('.backbone_person-name>span').text();
+
+				this.model = this.backbonePeople.findWhere( { 'title': name } );
+				this.trigger( 'detailView', this.model );
+			},
+
+			initialize: function( options ) {
+				var self = this;
+				console.log( 'BackboneGrid.initialize' );
+				this.backbonePeople = options.backbonePeople;
+				this.backboneRouter = options.backboneRouter;
+				this.listenTo( this.backbonePeople, 'change', this.searchChanged );
+				$( document ).on( 'keyup', _.throttle( function( e ){
+					self.keyPress( e );
+				}, 125 ) );
+				this.listenTo( this, 'syncBGModel', this.syncModel );
+
+			},
+
+			syncModel: function( model ) {
+				this.model = model;
+			},
+
+			searchChanged: function() {
+				_.debounce( this.adjustSearch(), 250 );
+			},
+
+			adjustSearch: function() {
+				console.log( 'backbone_Grid:searchChanged'  );
+				if ( 'undefined' === typeof this.backbonePeople.search ) {
+					return;
+				}
+
+				// If the search string is blank, don't include '?search=' string in navigation
+				var navigateto = ( '' === this.backbonePeople.search ) ? '' : '?search=' + this.backbonePeople.search;
+				this.backboneRouter.navigate( navigateto, { replace: false } );
+				this.render();
 			},
 
 			getCurrentIndex: function() {
@@ -145,13 +266,39 @@ window.wp = window.wp || {};
 				return ( this.getCurrentIndex() + 1 ) < this.backbonePeople.length;
 			},
 
+			goPreviousRow: function() {
+				if ( ! this.hasPreviousRow() ) {
+					return;
+				}
+				this.model = this.backbonePeople.at( this.backbonePeople.indexOf( this.model ) - this.modelsPerRow );
+				this.render();
+			},
+
+			hasPreviousRow: function() {
+				return ( this.getCurrentIndex() - this.modelsPerRow ) > -1;
+			},
+
+			goNextRow: function() {
+				if ( ! this.hasNextRow() ) {
+					return;
+				}
+				this.model = this.backbonePeople.at( this.getCurrentIndex() + this.modelsPerRow );
+				this.render();
+			},
+
+			hasNextRow: function() {
+				return ( this.getCurrentIndex() + this.modelsPerRow ) < this.backbonePeople.length;
+			},
+
 			keyPress: function( event ){
-				console.log( 'keypress' );
+				console.log( 'keypress - ' + event.keyCode );
+
 				// Pressing the escape key closes the dialog
 				if ( event.keyCode === 27 ) {
-					this.hidePersonDetailDialog();
+					this.trigger( 'closeModal' );
 					return event;
 				}
+
 				if ( 13 === event.keyCode || 32 === event.keyCode ) { /* enter or space */
 					$( event.target ).trigger( 'click' );
 				}
@@ -160,103 +307,28 @@ window.wp = window.wp || {};
 					return;
 				}
 
-				if ( 39 === event.keyCode ) { /* right */
+				if ( 39 === event.keyCode || 9 === event.keyCode && ( ! event.shiftKey ) ) { /* right or tab */
+					console.log( 'gonext' );
 					_.once( this.goNext() );
 				}
 
-				if ( 37 === event.keyCode ) { /* left */
+				if ( 37 === event.keyCode || ( 9 === event.keyCode && event.shiftKey )) { /* left or shift-tab */
 					_.once( this.goPrevious() );
 				}
-			},
 
-			render: function() {
-				var self = this;
-				this.backboneRouter.navigate( '?details=' + this.model.get( 'name' ), { replace: false } );
-
-				console.log( 'BackbonePersonDetail render ' );
-				this.$el.html( this.template( this.model.attributes ) );
-				this.showPersonDetailDialog();
-				return this;
-			}
-		}),
-
-		/**
-		 * The Search bar
-		 */
-		BackboneSearchbar = Backbone.View.extend({
-			backbonePeople: null, /* the collection of backbonePeople */
-			self:     this,
-			el:       '#backbone_search',
-			template: wp.template( 'backbone_person-search' ),
-			search:   '',
-
-			initialize: function( options ) {
-				var self = this,
-					backboneRouter = options.backboneRouter;
-				console.log( 'backbone_Searchbar.initialize ' );
-				this.backbonePeople = options.backbonePeople;
-				this.render();
-				this.$el.on( 'keypress', '#backbone_person-search-field',_.debounce( function(){
-					self.searchChange( this );
-				}, 250 ) );
-			},
-
-			events: {
-				'keypress #backbone_person-search-field':  'searchChange'
-			},
-
-			searchChange: function( search ) {
-				var searchFor = this.$el.find( search ).prop('value');
-				console.log( 'searchchange ' + searchFor );
-				this.backbonePeople.searchFor( searchFor );
-			},
-
-			render: function() {
-				var self = this;
-				console.log( 'backbone_Searchbar:render ' );
-				var templatehtml = this.template( this.search );
-				this.$el.html( templatehtml );
-				return this;
-			}
-		}),
-		/**
-		 * The Grid view - displays the directory grid
-		 */
-		BackboneGrid = Backbone.View.extend({
-			backbonePeople: null, /* the collection of backbonePeople */
-			el:       '#backbone_grid',
-			msnry:    null,
-			template:  wp.template( 'backbone_person' ),
-
-			events: {
-				'click .backbone_person-card': 'clickackbonePerson'
-			},
-
-			clickackbonePerson: function( person ) {
-				console.log( 'triggering personDetail' );
-				this.trigger( 'detailView', person );
-			},
-
-			initialize: function( options ) {
-				console.log( 'BackboneGrid.initialize' );
-				this.backbonePeople = options.backbonePeople;
-				this.backboneRouter = options.backboneRouter;
-				this.listenTo( this.backbonePeople, 'change', this.searchChanged );
-			},
-
-			searchChanged: function() {
-				_.debounce( this.adjustSearch(), 250 );
-			},
-
-			adjustSearch: function() {
-				console.log( 'backbone_Grid:searchChanged'  );
-				if ( 'undefined' === typeof this.backbonePeople.search ) {
-					return;
+				if ( 38 === event.keyCode ) { /* up */
+					_.once( this.goPreviousRow() );
 				}
-				// If the search string is blank, don't include '?search=' string in navigation
-				var navigateto = ( '' === this.backbonePeople.search ) ? '' : '?search=' + this.backbonePeople.search;
-				this.backboneRouter.navigate( navigateto, { replace: false } );
-				this.render();
+
+				if ( 40 === event.keyCode ) { /* down */
+					_.once( this.goNextRow() );
+				}
+			},
+
+			focusSelected: function() {
+				var focusElement = '#backbone_person-' + this.model.get( 'ID' );
+				console.log( focusElement );
+				$( focusElement ).focus();
 			},
 
 			render: function() {
@@ -268,7 +340,7 @@ window.wp = window.wp || {};
 					gridmodels = this.backbonePeople.models;
 				} else {
 					gridmodels = _.filter( this.backbonePeople.models, function( theModel ) {
-						return ( -1 !== theModel.get( 'name' ).toLowerCase().indexOf( search ) );
+						return ( -1 !== theModel.get( 'title' ).toLowerCase().indexOf( search ) );
 					} );
 				}
 				var newmodels = '', newEl = '';
@@ -281,6 +353,12 @@ window.wp = window.wp || {};
 				console.log( ' gridrender complete ' );
 
 				self.$el.parent().find( '#backbone-person-count>span' ).html( gridmodels.length );
+
+				if ( _.isUndefined( self.model.get( 'ID' ) ) ) {
+					self.model = self.backbonePeople.first();
+				}
+				this.focusSelected();
+				this.trigger( 'syncModel', this.model );
 
 			}
 		}),
@@ -305,8 +383,9 @@ window.wp = window.wp || {};
 			openbackbonePerson: function( name ) {
 				console.log( 'route: ' + name + ' ' );
 				// find the model
-				BackboneDirectoryApp.personDetail.model = BackboneDirectoryApp.backbonePeople.where({ 'name': name })[0];
-				BackboneDirectoryApp.personDetail.render();
+				var model = BackboneDirectoryApp.backbonePeople.where( { 'title': name } )[0];
+				BackboneDirectoryApp.backboneGrid.trigger( 'syncBGModel', model );
+				BackboneDirectoryApp.backboneGrid.trigger( 'detailView', model );
 
 			},
 
@@ -324,23 +403,63 @@ window.wp = window.wp || {};
 		 */
 		BackboneDirectoryApp = {
 
+			pagelimit:   80,
+			loadedCount: 0,
+
+			fetch: function( offset ) {
+				this.backbonePeople.url = '/wp-json/posts?filter[posts_per_page]=' +
+					this.pagelimit +
+					' &filter[order]=ASC&filter[offset]=' +
+					offset +
+					'&type=backbonedirectory';
+
+				return this.backbonePeople.fetch( { remove: false } );
+			},
+
+			watchForScroll: function( retrigger ) {
+				var self = this;
+				$( window ).on( 'scroll', function( args, retrigger ) {
+					if( retrigger || $(window).scrollTop() + $(window).height() > $( '#backbone_grid-container' ).height() - 100 ) {
+							$( window ).off( 'scroll' );
+							console.log( 'scroll' );
+							var fetched = self.fetch( self.loadedCount );
+							fetched.done( function( results ) {
+								if ( ! _.isEmpty( results ) ) {
+									self.loadedCount += self.pagelimit;
+									self.backboneGrid.render();
+									self.watchForScroll( retrigger );
+								}
+						});
+					}
+				});
+				if ( retrigger ) {
+					$( window ).trigger( 'scroll', true );
+				}
+			},
+
+			recalcModelsPerRow: function() {
+				var wide = $( '#backbone_grid' ).innerWidth() - 10,
+					cardwidth = $( '.backbone_person-card:first' ).innerWidth();
+				this.backboneGrid.modelsPerRow = Math.floor( wide/cardwidth );
+				console.log( 'recalcModelsPerRow - ' + Math.floor( wide/cardwidth ) );
+			},
+
 			initialize: function() {
 				var self = this, users, imgsrc, gravhash, fetched, fetched2,
 					$loadcount = $( '#backbone_directory_loading_count' );
 
 				self.backbonePeople = new BackbonePersonCollection( );
-				self.backbonePeople.url = '/wp-json/posts?filter[posts_per_page]=1000&filter[order]=ASC&filter[offset]=22&type=backbonedirectory';
 
-				fetched = self.backbonePeople.fetch();
+				fetched = this.fetch( self.loadedCount );
 				fetched.done( function( results ) {
-					console.log( results );
-					self.backboneRouter = new BackboneRouter();
+					self.loadedCount += self.pagelimit;
 					self.backbonePersonDisp = new BackbonePersonDisplay( {
 						model: new BackbonePerson()
 					});
 					var options = {
 							'backbonePeople': self.backbonePeople,
-							'backboneRouter': self.backboneRouter
+							'backboneRouter': self.backboneRouter,
+							model: new BackbonePerson()
 							};
 					self.backboneGrid = new BackboneGrid( options );
 
@@ -352,8 +471,10 @@ window.wp = window.wp || {};
 							} ) );
 
 					self.backboneGrid.render();
+					self.recalcModelsPerRow();
+					self.watchForScroll();
+					$( self ).trigger( 'finishLoad' );
 				});
-
 
 
 
@@ -361,12 +482,22 @@ window.wp = window.wp || {};
 					var wide = $( this ).innerWidth() - 10 ;
 					$( '#backbone_grid-container' ).height( '100%' );
 					$( '#backbone_grid-container' ).width( wide + 'px' );
+
+					self.recalcModelsPerRow();
 				}, 150 ) );
 
-				Backbone.history.start( {
-					pushState: true,
-					root:      window.location.pathname
-					} );
+				$( self ).on( 'finishLoad', function(){
+					console.log( 'finishLoad' );
+					self.backboneRouter = new BackboneRouter();
+					self.personDetail.backboneRouter = self.backboneRouter;
+					Backbone.history.start( {
+						pushState: true,
+						root:      window.location.pathname,
+						silent:    false
+					});
+					self.backboneGrid.focusSelected();
+				});
+
 			}
 		};
 
