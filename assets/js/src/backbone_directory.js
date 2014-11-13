@@ -419,7 +419,8 @@ window.wp = window.wp || {};
 			watchForScroll: function( retrigger ) {
 				var self = this;
 				$( window ).on( 'scroll', function( args, retrigger ) {
-					if( retrigger || $(window).scrollTop() + $(window).height() > $( '#backbone_grid-container' ).height() - 100 ) {
+
+					if( true === retrigger || $(window).scrollTop() + screen.height > $('body').height()) {
 							$( window ).off( 'scroll' );
 							console.log( 'scroll' );
 							var fetched = self.fetch( self.loadedCount );
@@ -428,6 +429,8 @@ window.wp = window.wp || {};
 									self.loadedCount += self.pagelimit;
 									self.backboneGrid.render();
 									self.watchForScroll( retrigger );
+									console.log( $(document).height() );
+									$("body").scrollTop( $('#backbone_grid-container').height() - 1500 );
 								}
 						});
 					}
