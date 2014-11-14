@@ -149,12 +149,12 @@ window.wp = window.wp || {};
 			search:   '',
 
 			initialize: function( options ) {
-				var self = this,
-					backboneRouter = options.backboneRouter;
+				var self = this;
+				this.backboneRouter = options.backboneRouter;
 				console.log( 'backbone_Searchbar.initialize ' );
 				this.backbonePeople = options.backbonePeople;
 				this.render();
-				this.$el.on( 'keypress', '#backbone_person-search-field',_.debounce( function(){
+				this.$el.on( 'keyup', '#backbone_person-search-field',_.debounce( function(){
 					self.searchChange( this );
 				}, 250 ) );
 			},
@@ -459,6 +459,7 @@ window.wp = window.wp || {};
 					self.backbonePersonDisp = new BackbonePersonDisplay( {
 						model: new BackbonePerson()
 					});
+					self.backboneRouter = new BackboneRouter();
 					var options = {
 							'backbonePeople': self.backbonePeople,
 							'backboneRouter': self.backboneRouter,
@@ -491,7 +492,6 @@ window.wp = window.wp || {};
 
 				$( self ).on( 'finishLoad', function(){
 					console.log( 'finishLoad' );
-					self.backboneRouter = new BackboneRouter();
 					self.personDetail.backboneRouter = self.backboneRouter;
 					Backbone.history.start( {
 						pushState: true,
