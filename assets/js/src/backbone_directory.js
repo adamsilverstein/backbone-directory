@@ -149,12 +149,12 @@ window.wp = window.wp || {};
 			search:   '',
 
 			initialize: function( options ) {
-				var self = this,
-					backboneRouter = options.backboneRouter;
+				var self = this;
+				this.backboneRouter = options.backboneRouter;
 				console.log( 'backbone_Searchbar.initialize ' );
 				this.backbonePeople = options.backbonePeople;
 				this.render();
-				this.$el.on( 'keypress', '#backbone_person-search-field',_.debounce( function(){
+				this.$el.on( 'keyup', '#backbone_person-search-field',_.debounce( function(){
 					self.searchChange( this );
 				}, 250 ) );
 			},
@@ -323,7 +323,6 @@ window.wp = window.wp || {};
 				if ( 40 === event.keyCode ) { /* down */
 					_.once( this.goNextRow() );
 				}
-				this.focusSelected();
 			},
 
 			focusSelected: function() {
@@ -420,7 +419,8 @@ window.wp = window.wp || {};
 			watchForScroll: function( retrigger ) {
 				var self = this;
 				$( window ).on( 'scroll', function( args, retrigger ) {
-					if( retrigger || $(window).scrollTop() + $(window).height() > $( '#backbone_grid-container' ).height() - 200 ) {
+
+					if( true === retrigger || $(window).scrollTop() + screen.height > $('body').height()) {
 							$( window ).off( 'scroll' );
 							console.log( 'scroll' );
 							var fetched = self.fetch( self.loadedCount );
@@ -430,7 +430,7 @@ window.wp = window.wp || {};
 									self.backboneGrid.render();
 									self.watchForScroll( retrigger );
 									console.log( $(document).height() );
-									$("html, body").animate({ scrollTop: ( $(document).height() - $(window).height() - 500 ) }, 100);
+									$("body").scrollTop( $('#backbone_grid-container').height() - 1500 );
 								}
 						});
 					}
@@ -459,6 +459,7 @@ window.wp = window.wp || {};
 					self.backbonePersonDisp = new BackbonePersonDisplay( {
 						model: new BackbonePerson()
 					});
+					self.backboneRouter = new BackboneRouter();
 					var options = {
 							'backbonePeople': self.backbonePeople,
 							'backboneRouter': self.backboneRouter,
@@ -491,7 +492,6 @@ window.wp = window.wp || {};
 
 				$( self ).on( 'finishLoad', function(){
 					console.log( 'finishLoad' );
-					self.backboneRouter = new BackboneRouter();
 					self.personDetail.backboneRouter = self.backboneRouter;
 					Backbone.history.start( {
 						pushState: true,
