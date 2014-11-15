@@ -179,6 +179,11 @@ window.wp = window.wp || {};
 				console.log( 'backbone_Searchbar:render ' );
 				var templatehtml = this.template( this.search );
 				this.$el.html( templatehtml );
+				if ( 0 !== $( document ).find( '#wpadminbar' ).length ){
+					this.$el.css( 'margin-top', '38px' );
+				}
+				return this;
+
 				return this;
 			}
 		}),
