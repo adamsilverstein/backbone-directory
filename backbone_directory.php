@@ -44,7 +44,6 @@ define( 'backbone_TRANSIENT_HASH',    '0010024' );
 // Kailey's API key. It's free and good for 1000 calls per day. Or get another one here: https://developer.forecast.io/register
 define( 'backbone_DIRECTORY_FORECASTIO_APIKEY', 'eeb9e190650f8cf3b7328f2ae2986788' );
 
-include( backbone_DIRECTORY_PATH . 'includes/wp-tlc-transients/tlc-transients.php' );
 include( backbone_DIRECTORY_PATH . 'includes/directory_setup.php' );
 /**
  * Default initialization for the plugin:
